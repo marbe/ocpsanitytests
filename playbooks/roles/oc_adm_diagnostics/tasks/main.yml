@@ -1,0 +1,27 @@
+---
+
+- name: check | oc adm diagnostics
+  shell: "oc adm diagnostics {{item}}"
+  register: oc_adm_diagnostics_out
+  changed_when: 1==2
+  failed_when: oc_adm_diagnostics_out.rc > 0
+#  failed_when: "'Completed with no errors' not in oc_adm_diagnostics_out.stdout"
+  delegate_to: "{{groups['masters'] | first}}"
+  with_items:
+    - analyzelogs
+    - appcreate
+    - clusterregistry
+    - clusterrolebindings
+    - clusterroles
+    - clusterrouter
+    - configcontexts
+    - diagnosticpod
+    - etcdwritevolume
+    - masternode
+    - metricsapiproxy
+    - nodedefinitions
+    - routecertificatevalidation
+    - securitycontextconstraints
+    - serviceexternalips
+    - unitstatus
+

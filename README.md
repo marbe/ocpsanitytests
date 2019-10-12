@@ -53,5 +53,5 @@ The following parameters are needed to run the tests, in addition to a valid OCP
 	ocpappsdomain: <openshift application subdomain>
 	openshift_console_api: <master API FQDN and Port>
 	localregistry: <registry where nginx image >
-	testproject: <name of temporary project created for test app>  - default value is "scoobydoo"
-    storageclass: <persistent storage class type> - default is "glusterfs-storage" (optional)
+	testproject: <name of temporary project created for test app>  - default value is "sanitytest"
+	storageclass: <persistent storage class type> - optional

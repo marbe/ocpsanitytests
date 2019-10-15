@@ -1,0 +1,60 @@
+---
+# tasks file for infra_svc.yml
+- name: check | infrastructure service pods are up
+  shell: "oc --config=/root/.kube/config get pods -n {{item}}"
+  register: oc_get_pods
+  changed_when: 1==2
+  failed_when: "'Terminated' in oc_get_pods.stdout or 'ErrImagePull' in oc_get_pods.stdout or 'Failed' in oc_get_pods.stdout or 'Crash' in oc_get_pods.stdout"
+  with_items:
+    - default
+    - "{{ openshift_storage_glusterfs_namespace }}"
+    - openshift-monitoring
+    - openshift-logging
+    - openshift-infra
+
+- name: Get auth token
+  shell: oc --config=/root/.kube/config whoami -t
+  register: token
+
+- name: check | monitoring
+  uri:
+    url: "https://prometheus-k8s-openshift-monitoring.{{ openshift_master_default_subdomain }}/graph"
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ token.stdout }}"
+      #Authorization: "Bearer cWA3cZQmJ2jgOA8rUS_K6gTbg7aS3zBjy_3u_C2fLzs"    
+    validate_certs: no
+    status_code: 200
+  register: monitoring_check
+  #until: "'OK' in monitoring_check.msg"
+  retries: 3
+  delay: 2
+
+- name: check | logging
+  uri:
+    url: "https://kibana.{{ openshift_master_default_subdomain }}"
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ token.stdout }}"
+      #Authorization: "Bearer cWA3cZQmJ2jgOA8rUS_K6gTbg7aS3zBjy_3u_C2fLzs"    
+    validate_certs: no
+    status_code: 200
+  register: logging_check
+  #until: "'OK' in logging_check.msg"
+  retries: 3
+  delay: 2
+
+- name: check | metrics
+  uri:
+    url: "https://{{ openshift_metrics_hawkular_hostname }}/hawkular/metrics"
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ token.stdout }}"
+      #Authorization: "Bearer cWA3cZQmJ2jgOA8rUS_K6gTbg7aS3zBjy_3u_C2fLzs"    
+    validate_certs: no
+    status_code: 200
+  register: metrics_check
+  #until: "'OK' in metrics_check.msg"
+  retries: 3
+  delay: 2
+

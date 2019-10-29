@@ -1,3 +1,1 @@
 **/*.retry
-**/etcd.conf
-**/kubeconfig

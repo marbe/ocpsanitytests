@@ -1,56 +1,64 @@
 ---
 
 - name: Create test project | check if already exists
-  shell: "oc --config=../kubeconfig get projects"
+  shell: "oc --config=/root/.kube/config get projects"
   register: proj_exists
 
 - name: Create test project | delete if exists
-  shell: "oc --config=../kubeconfig delete project {{testproject}}" 
+  shell: "oc --config=/root/.kube/config delete project {{testproject}}" 
   when: "'{{testproject}}' in proj_exists.stdout"
 
 - name: Create test project | create the test project
-  shell: "oc --config=../kubeconfig new-project {{testproject}}"
+  shell: "oc --config=/root/.kube/config new-project {{testproject}}"
+
+- name: Create test project folder
+  file:
+    state: directory
+    path: test-project
+    owner: root
+    group: root
+    mode: '0644'
 
 - name: deploy application | prepare nginx yaml
   template:
     src: nginx.yaml
-    dest: roles/create_project/files/nginx.yaml
+    dest: test-project/nginx.yaml
   when: storageclass is not defined
 
 - name: deploy application | prepare nginx yaml
   template:
     src: nginx_with_pvc.yaml
-    dest: roles/create_project/files/nginx.yaml
+    dest: test-project/nginx.yaml
   when: storageclass is defined
 
 - name: deploy application | prepare nginx pvc yaml
   template:
     src: nginxpvc.yaml
-    dest: roles/create_project/files/nginxpvc.yaml
+    dest: test-project/nginxpvc.yaml
   when: storageclass is defined
 
 - name: deploy application | prepare route yaml
   template:
     src: nginxroute.yaml
-    dest: roles/create_project/files/nginxroute.yaml
+    dest: test-project/nginxroute.yaml
 
 - name: deploy application | prepare service yaml
   template:
     src: nginxsvc.yaml
-    dest: roles/create_project/files/nginxsvc.yaml
+    dest: test-project/nginxsvc.yaml
 
 - name: deploy application | create nginx pvc
-  shell: "oc --config=../kubeconfig create -f roles/create_project/files/nginxpvc.yaml"
+  shell: "oc --config=/root/.kube/config create -f test-project/nginxpvc.yaml"
   when: storageclass is defined
 
 - name: deploy application | deploy nginx deploymentconfig
-  shell: "oc --config=../kubeconfig create -f roles/create_project/files/nginx.yaml"
+  shell: "oc --config=/root/.kube/config create -f test-project/nginx.yaml"
 
 - name: deploy application | create nginx service
-  shell: "oc --config=../kubeconfig create -f roles/create_project/files/nginxsvc.yaml"
+  shell: "oc --config=/root/.kube/config create -f test-project/nginxsvc.yaml"
 
 - name: deploy application | create route for nginx
-  shell: "oc --config=../kubeconfig create -f roles/create_project/files/nginxroute.yaml"
+  shell: "oc --config=/root/.kube/config create -f test-project/nginxroute.yaml"
 
 - name: check | pods are up
   shell: "oc get pods -n {{testproject}} |grep -i nginx|grep -i Running"
@@ -66,17 +74,17 @@
 
 - name: check | app answers via router
   uri:
-    url: http://nginx-{{testproject}}.{{ocpappsdomain}}
+    url: http://nginx-{{testproject}}.{{openshift_master_default_subdomain}}
     status_code: 200
     return_content: yes
   when: storageclass is not defined
 
 - name: check | app answers via router
   uri:
-    url: http://nginx-{{testproject}}.{{ocpappsdomain}}
+    url: http://nginx-{{testproject}}.{{openshift_master_default_subdomain}}
     status_code: 403
     return_content: yes
   when: storageclass is defined
 
 - name: Delete a project
-  shell: "oc --config=../kubeconfig delete project {{testproject}}"
+  shell: "oc --config=/root/.kube/config delete project {{testproject}}"

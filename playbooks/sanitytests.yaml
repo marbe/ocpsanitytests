@@ -37,7 +37,7 @@
 - hosts: "{{groups['masters'] | first}}"
   gather_facts: false
   tasks:
-  - name: Final Check | pause for 5 minutes
+  - name: Final Check | pause for 1 minutes
     pause:
       minutes: 1
 

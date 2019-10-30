@@ -58,6 +58,10 @@ Additional Parameters:
 
 The following parameters are needed to run the tests, in addition to a valid OCP inventory file for the environment (the one used to deploy)
 
-        localregistry: <registry where nginx image >
+        localregistry: <registry where nginx image > - default is nginx:latest
         testproject: <name of temporary project created for test app>  - default value is "sanitytest"
-        storageclass: <persistent storage class type> - optional
+        storageclass: <persistent storage class type> - default is glusterfs
+
+Example Run:
+
+ansible-playbook playbooks/sanitytests.yaml -b  --extra-vars "token=<YOUR_TOKEN>"

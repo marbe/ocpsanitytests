@@ -1,7 +1,6 @@
 ---
-
 - name: check | infrastructure pods are up
-  shell: "oc --config=../kubeconfig get pods -n {{item}}"
+  shell: "oc --config=/root/.kube/config get pods -n {{item}}"
   register: oc_get_pods
   changed_when: 1==2
   failed_when: "'Terminated' in oc_get_pods.stdout or 'ErrImagePull' in oc_get_pods.stdout or 'Failed' in oc_get_pods.stdout or 'Crash' in oc_get_pods.stdout"
@@ -13,19 +12,19 @@
     - openshift-sdn
 
 - name: check | all pods in all projects are running
-  shell: "oc --config=../kubeconfig get pods --all-namespaces"
+  shell: "oc --config=/root/.kube/config get pods --all-namespaces"
   register: oc_get_pods
   changed_when: 1==2
   failed_when: "'Terminated' in oc_get_pods.stdout or 'Err' in oc_get_pods.stdout or 'Failed' in oc_get_pods.stdout or 'Crash' in oc_get_pods.stdout"
 
 - name: check | node status
-  shell: "oc --config=../kubeconfig get nodes"
+  shell: "oc --config=/root/.kube/config get nodes"
   register: oc_get_nodes
   changed_when: 1==2
   failed_when: "'NotReady' in oc_get_nodes.stdout"
 
 - name: check | router
-  shell: "oc --config=../kubeconfig -n default get deploymentconfigs/router"
+  shell: "oc --config=/root/.kube/config -n default get deploymentconfigs/router"
   register: router_health
   changed_when: 1==2
   failed_when: "'router' not in router_health.stdout"
@@ -40,14 +39,12 @@
 
 - name: check | console
   uri:
-    url: "https://{{openshift_console_api}}"
+    url: "https://{{ openshift_master_cluster_public_hostname }}:{{ openshift_master_api_port | default('8443') }}"
     validate_certs: no
   register: console_check
   until: "'OK' in console_check.msg"
   retries: 3
   delay: 2
-
----
 
 - name: check | infrastructure pods are up
   shell: "oc --config=/root/.kube/config get pods -n {{item}}"
